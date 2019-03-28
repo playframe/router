@@ -10,10 +10,28 @@
 // ```
 
 // ## Usage
-//  [WIP]
+// ```js
+// import {h, app, route, mount, Component} from '@playframe/playframe'
+
+// route({
+//   counter: 1,
+//   _: {
+//     inc: (e, state)=> state.counter++,
+//     dec: (e, state)=> state.counter--
+//   },
+//   routes: {
+//     '/': ({state})=> <a href="/hello/world"><h1>Link</h1></a>,
+//     '/counter': ({state})=> CounterView(state),
+//     '/hello/:name': ({state, param})=> <h1>Hello {param.name}!</h1>,
+//     '/*': ()=>  <h1>404</h1>
+//   }
+// })(
+//   mount(document.body)
+// )
+// ```
 
 // ## Source
-var LEAF, NAMED, WILDCARD, _404, _Page, _fallback, _href, _props, _state, _sync, add_methods, doc, forest, get_trie, grow_trie, isArray, make_trie, match, set_Page, view, walk_trie;
+var LEAF, NAMED, WILDCARD, _404, _Page, _fallback, _href, _props, _state, _subscribed, _sync, add_methods, doc, forest, get_trie, grow_trie, isArray, make_trie, match, set_Page, subscribe, view, walk_trie;
 
 doc = this.document;
 
@@ -37,6 +55,8 @@ _props = null;
 
 _Page = null;
 
+_subscribed = false;
+
 _404 = () => {
   return 404;
 };
@@ -51,6 +71,10 @@ module.exports = view = (sync) => {
     var href;
     _state = state;
     ({href} = l || (l = location));
+    if (!_subscribed && doc) {
+      subscribe();
+      _subscribed = true;
+    }
     if (href !== _href) {
       set_Page(l);
     }
@@ -68,7 +92,7 @@ add_methods = () => {
     return _sync.next(() => {
       set_Page(location);
       _state._({});
-      return _sync.frame(() => {
+      _sync.frame(() => {
         return scrollTo(0, 0);
       });
     });
@@ -78,15 +102,15 @@ add_methods = () => {
       height: document.body.clientHeight
     }, '');
     history.pushState({}, '', href);
-    return hop();
+    hop();
   };
-  return _state._.replace = (href) => {
+  _state._.replace = (href) => {
     history.replaceState({}, '', href);
-    return hop();
+    hop();
   };
 };
 
-if (doc) {
+subscribe = () => {
   doc.addEventListener(doc.ontouchstart ? 'touchstart' : 'click', (event) => {
     var el;
     el = (typeof event.composedPath === "function" ? event.composedPath()[0] : void 0) || event.target;
@@ -111,7 +135,7 @@ if (doc) {
       });
     }), 1000);
   });
-}
+};
 
 set_Page = (l) => {
   var hash, href, i, j, k, len, pair, pathname, query, ref, search, v;

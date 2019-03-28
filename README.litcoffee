@@ -10,7 +10,25 @@ npm install --save @playframe/router
 ```
 
 ## Usage
- [WIP]
+```js
+import {h, app, route, mount, Component} from '@playframe/playframe'
+
+route({
+  counter: 1,
+  _: {
+    inc: (e, state)=> state.counter++,
+    dec: (e, state)=> state.counter--
+  },
+  routes: {
+    '/': ({state})=> <a href="/hello/world"><h1>Link</h1></a>,
+    '/counter': ({state})=> CounterView(state),
+    '/hello/:name': ({state, param})=> <h1>Hello {param.name}!</h1>,
+    '/*': ()=>  <h1>404</h1>
+  }
+})(
+  mount(document.body)
+)
+```
 
 ## Source
 
@@ -31,6 +49,7 @@ npm install --save @playframe/router
     _href = null
     _props = null
     _Page = null
+    _subscribed = false
 
     _404 = => 404
     _fallback = => _Page = _404
@@ -40,6 +59,10 @@ npm install --save @playframe/router
     module.exports = view = (sync)=> _sync = sync; (state, l)=>
       _state = state
       {href} = l or= location
+
+      if not _subscribed and doc
+        do subscribe
+        _subscribed = true
 
       unless href is _href
         set_Page l
@@ -55,18 +78,23 @@ npm install --save @playframe/router
         set_Page location
         _state._ {}
         _sync.frame => scrollTo 0, 0
+        return
 
       _state._.push = (href)=>
         history.replaceState {height: document.body.clientHeight}, ''
         history.pushState {}, '', href
         do hop
+        return
 
       _state._.replace = (href)=>
         history.replaceState {}, '', href
         do hop
+        return
+      
+      return
 
 
-    if doc
+    subscribe = =>
       doc.addEventListener(
         if doc.ontouchstart then 'touchstart' else 'click'
         (event)=>
@@ -90,7 +118,8 @@ npm install --save @playframe/router
         set_Page location
         _state._ {}
         setTimeout (=> _sync.render => style.minHeight = ''), 1000
-
+      
+      return
 
 
     set_Page = (l)=>
